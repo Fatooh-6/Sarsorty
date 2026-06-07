@@ -1,0 +1,953 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#1a0010">
+<title>محكمة الحب 🌹</title>
+<link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800;900&family=Amiri:wght@400;700&display=swap" rel="stylesheet">
+<style>
+/* ===================== RESET & BASE ===================== */
+*, *::before, *::after { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+
+:root {
+  --rose:#e63975; --rose-l:#ff7aaa; --rose-d:#b0154e;
+  --gold:#f5c842; --gold-l:#ffe680; --gold-d:#c49a00;
+  --bg:#130010;
+  --glass:rgba(255,255,255,0.07);
+  --glass2:rgba(255,255,255,0.12);
+  --border:rgba(255,255,255,0.18);
+  --border2:rgba(255,255,255,0.28);
+  --text:rgba(255,255,255,0.92);
+  --muted:rgba(255,255,255,0.55);
+
+  /* Mobile-first font sizes */
+  --fs-xs:0.78rem; --fs-sm:0.9rem; --fs-md:1rem;
+  --fs-lg:1.15rem; --fs-xl:1.35rem; --fs-2xl:1.7rem; --fs-3xl:2.3rem;
+}
+
+html { height:100%; }
+
+body {
+  font-family:'Tajawal', sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100%;
+  height:100%;
+  overflow:hidden;
+  direction:rtl;
+  -webkit-font-smoothing:antialiased;
+}
+
+/* ===================== CANVAS LAYERS ===================== */
+#bg-canvas, #petal-canvas {
+  position:fixed; inset:0; z-index:0; pointer-events:none;
+}
+#petal-canvas { z-index:4; }
+
+#red-overlay {
+  position:fixed; inset:0; z-index:2; pointer-events:none;
+  background:rgba(220,0,40,0.35); opacity:0;
+  transition:opacity 0.15s;
+}
+#red-overlay.on { opacity:1; }
+
+/* ===================== PAGES ===================== */
+.page {
+  position:fixed; inset:0;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:flex-start;
+  padding:env(safe-area-inset-top, 16px) 16px env(safe-area-inset-bottom, 16px) 16px;
+  padding-top: max(env(safe-area-inset-top, 16px), 60px);
+  z-index:10;
+  opacity:0; pointer-events:none;
+  overflow-y:auto; overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  transition:opacity 0.5s ease;
+}
+.page.active { opacity:1; pointer-events:all; }
+
+/* ===================== PROGRESS DOTS ===================== */
+#progress {
+  position:fixed; top:max(env(safe-area-inset-top,12px),12px); left:50%;
+  transform:translateX(-50%);
+  z-index:50; display:flex; gap:7px; align-items:center;
+  padding:6px 14px;
+  background:rgba(0,0,0,0.3); backdrop-filter:blur(10px);
+  border-radius:20px; border:1px solid rgba(255,255,255,0.1);
+}
+.dot {
+  width:7px; height:7px; border-radius:50%;
+  background:rgba(255,255,255,0.25);
+  transition:all 0.4s cubic-bezier(.34,1.56,.64,1);
+}
+.dot.on { background:var(--rose); width:22px; border-radius:4px; box-shadow:0 0 8px var(--rose); }
+
+/* ===================== GLASS CARD ===================== */
+.card {
+  background:var(--glass);
+  backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
+  border:1px solid var(--border);
+  border-radius:26px;
+  padding:28px 22px 24px;
+  width:100%; max-width:430px;
+  text-align:center;
+  position:relative; overflow:hidden;
+  box-shadow:0 12px 60px rgba(180,0,60,0.22), inset 0 1px 0 rgba(255,255,255,0.12);
+  margin:0 auto;
+  flex-shrink:0;
+}
+.card::before {
+  content:''; position:absolute; inset:0;
+  background:radial-gradient(ellipse at 40% 0%, rgba(230,57,117,0.13), transparent 65%);
+  pointer-events:none;
+}
+
+/* ===================== BUTTONS ===================== */
+.btn {
+  display:inline-flex; align-items:center; justify-content:center; gap:8px;
+  font-family:'Tajawal',sans-serif; font-weight:800;
+  border:none; cursor:pointer;
+  border-radius:50px; transition:all 0.25s ease;
+  -webkit-user-select:none; user-select:none;
+  position:relative; overflow:hidden;
+  touch-action:manipulation;
+}
+.btn:active { transform:scale(0.94) !important; }
+
+.btn-rose {
+  background:linear-gradient(135deg, var(--rose-l), var(--rose-d));
+  color:#fff; font-size:var(--fs-lg);
+  padding:15px 32px;
+  box-shadow:0 8px 28px rgba(230,57,117,0.45);
+  width:100%;
+}
+.btn-rose:hover { transform:translateY(-2px); box-shadow:0 14px 36px rgba(230,57,117,0.6); }
+
+.btn-ghost {
+  background:var(--glass2); border:1.5px solid var(--border2);
+  color:#fff; font-size:var(--fs-md);
+  padding:13px 26px; min-width:130px;
+  backdrop-filter:blur(10px);
+}
+.btn-ghost:hover { background:rgba(255,255,255,0.2); transform:translateY(-2px); }
+
+.btn-gold {
+  background:linear-gradient(135deg, var(--gold-l), var(--gold-d));
+  color:#2a1000; font-size:var(--fs-xl);
+  padding:17px 36px; width:100%;
+  box-shadow:0 10px 38px rgba(245,200,66,0.45);
+  animation:goldPulse 2.2s ease-in-out infinite;
+}
+.btn-gold:hover { transform:translateY(-3px) scale(1.02); animation:none; box-shadow:0 18px 50px rgba(245,200,66,0.65); }
+
+.btn-green {
+  background:linear-gradient(135deg,#1bcc6f,#0a8a44);
+  color:#fff; font-size:var(--fs-lg);
+  padding:16px 34px; width:100%;
+  box-shadow:0 10px 35px rgba(0,180,90,0.4);
+  animation:greenPulse 2s ease-in-out infinite;
+}
+.btn-green:hover { transform:translateY(-3px); animation:none; }
+
+/* ===================== ANIMATIONS ===================== */
+@keyframes goldPulse {
+  0%,100% { box-shadow:0 10px 38px rgba(245,200,66,0.45); }
+  50% { box-shadow:0 16px 55px rgba(245,200,66,0.75), 0 0 25px rgba(245,200,66,0.3); }
+}
+@keyframes greenPulse {
+  0%,100% { box-shadow:0 10px 35px rgba(0,180,90,0.4); }
+  50% { box-shadow:0 16px 55px rgba(0,180,90,0.7); }
+}
+@keyframes bounce {
+  0%,100% { transform:translateY(0); }
+  50% { transform:translateY(-10px); }
+}
+@keyframes floatBear {
+  0%,100% { transform:translateY(0) rotate(-3deg); }
+  50% { transform:translateY(-14px) rotate(3deg); }
+}
+@keyframes heartBeat {
+  0%,100% { transform:scale(1); }
+  30% { transform:scale(1.25); }
+  60% { transform:scale(0.95); }
+  80% { transform:scale(1.15); }
+}
+@keyframes glow {
+  0%,100% { filter:drop-shadow(0 0 8px rgba(255,80,130,0.5)); }
+  50% { filter:drop-shadow(0 0 22px rgba(255,80,130,0.95)); }
+}
+@keyframes alertScroll {
+  0% { background-position:0% 0%; }
+  100% { background-position:200% 0%; }
+}
+@keyframes stampFlicker {
+  0%,100% { opacity:1; } 50% { opacity:0.6; }
+}
+@keyframes pageIn {
+  from { opacity:0; transform:scale(0.88) translateY(28px); }
+  to { opacity:1; transform:scale(1) translateY(0); }
+}
+@keyframes slideUp {
+  from { opacity:0; transform:translateY(24px); }
+  to { opacity:1; transform:translateY(0); }
+}
+@keyframes shake {
+  0%,100% { transform:translateX(0) rotate(0); }
+  15%,45%,75% { transform:translateX(-10px) rotate(-1.5deg); }
+  30%,60%,90% { transform:translateX(10px) rotate(1.5deg); }
+}
+@keyframes giftDrop {
+  0% { transform:translateY(-120vh) scale(0.2) rotate(-15deg); opacity:0; }
+  70% { transform:translateY(5vh) scale(1.08) rotate(2deg); opacity:1; }
+  85% { transform:translateY(-2vh) scale(0.97) rotate(-1deg); }
+  100% { transform:translateY(0) scale(1) rotate(0); opacity:1; }
+}
+@keyframes bouquetBloom {
+  0% { transform:scale(0) rotate(-10deg); opacity:0; }
+  60% { transform:scale(1.15) rotate(3deg); opacity:1; }
+  100% { transform:scale(1) rotate(0); opacity:1; }
+}
+@keyframes riseUp { from { opacity:0; transform:translateY(18px); } to { opacity:1; transform:translateY(0); } }
+@keyframes particleFall { 0% { transform:translateY(-60px) rotate(0deg); opacity:1; } 100% { transform:translateY(110vh) rotate(720deg); opacity:0; } }
+@keyframes roseRain { 0% { transform:translateY(-80px) rotate(0deg); opacity:0; } 5% { opacity:1; } 100% { transform:translateY(108vh) rotate(500deg); opacity:0; } }
+@keyframes balloonUp { from { transform:translateY(110vh) rotate(var(--rot,0deg)); opacity:1; } to { transform:translateY(-15vh) rotate(calc(var(--rot,0deg) + 20deg)); opacity:0; } }
+@keyframes fireworkPop { from { transform:translate(0,0) scale(1.5); opacity:1; } to { transform:translate(var(--fx),var(--fy)) scale(0); opacity:0; } }
+@keyframes ambFloat {
+  0% { transform:translateY(102vh) rotate(0deg); opacity:0; }
+  8% { opacity:0.2; }
+  92% { opacity:0.15; }
+  100% { transform:translateY(-8vh) rotate(360deg); opacity:0; }
+}
+
+/* ===================== PAGE 1 — ARREST ===================== */
+.alert-strip {
+  background:linear-gradient(90deg,#ff002e,#aa0020,#ff002e);
+  background-size:200% 100%;
+  animation:alertScroll 1.1s linear infinite;
+  border-radius:12px; padding:9px 16px;
+  font-size:var(--fs-sm); font-weight:900;
+  letter-spacing:0.08em; margin-bottom:18px;
+  text-shadow:0 0 8px rgba(255,255,255,0.4);
+}
+.stamp {
+  position:absolute; top:16px; left:16px;
+  border:3px solid rgba(255,40,40,0.7);
+  color:rgba(255,40,40,0.8);
+  font-size:var(--fs-xs); font-weight:900;
+  padding:5px 10px; border-radius:6px;
+  transform:rotate(-14deg); letter-spacing:0.08em;
+  animation:stampFlicker 2.8s ease-in-out infinite;
+}
+.big-emoji {
+  font-size:clamp(4rem,18vw,7rem);
+  display:block; margin:6px 0;
+  animation:bounce 1.2s ease-in-out infinite;
+  filter:drop-shadow(0 8px 20px rgba(230,57,117,0.5));
+}
+.arrest-title {
+  font-size:clamp(2rem,8vw,3.2rem); font-weight:900;
+  background:linear-gradient(135deg,#ff6b99,#ffb3cc,#ffe8f0);
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  background-clip:text;
+  margin-bottom:14px;
+  animation:glow 2.2s ease-in-out infinite;
+  line-height:1.2;
+}
+.info-block {
+  background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.11);
+  border-radius:14px; padding:12px 16px; margin:8px 0;
+  display:flex; align-items:flex-start; gap:10px; text-align:right;
+}
+.info-label {
+  color:var(--gold); font-size:var(--fs-xs); font-weight:800;
+  white-space:nowrap; flex-shrink:0; margin-top:2px;
+}
+.info-val { font-size:var(--fs-sm); font-weight:600; line-height:1.5; color:var(--text); }
+
+/* ===================== PAGE 2 — COURT ===================== */
+.bear {
+  font-size:clamp(5rem,22vw,8.5rem);
+  display:block; margin:0 auto 6px;
+  animation:floatBear 3.5s ease-in-out infinite;
+  filter:drop-shadow(0 10px 28px rgba(230,57,117,0.35));
+}
+.bubble {
+  background:rgba(255,255,255,0.96); color:#250018;
+  border-radius:18px 18px 18px 4px;
+  padding:14px 18px; margin:10px 0 18px;
+  font-size:var(--fs-md); font-weight:700; line-height:1.55;
+  box-shadow:0 6px 25px rgba(0,0,0,0.12);
+  text-align:right;
+  position:relative;
+}
+.bubble::after {
+  content:''; position:absolute; bottom:-12px; right:24px;
+  border:12px solid transparent;
+  border-top-color:rgba(255,255,255,0.96);
+  border-bottom:none;
+}
+.rejected-msg {
+  background:rgba(255,40,40,0.15); border:1px solid rgba(255,40,40,0.35);
+  border-radius:12px; padding:10px 16px;
+  font-size:var(--fs-sm); font-weight:700; margin:10px 0;
+  display:none; animation:shake 0.45s ease;
+}
+.btn-row { display:flex; gap:12px; justify-content:center; flex-wrap:wrap; }
+
+/* ===================== PAGE 3 — EVIDENCE ===================== */
+.evidence-list { display:flex; flex-direction:column; gap:11px; margin:14px 0; }
+.ev-card {
+  background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.13);
+  border-radius:16px; padding:14px 16px;
+  display:flex; align-items:flex-start; gap:13px; text-align:right;
+  transition:transform 0.25s, box-shadow 0.25s;
+}
+.ev-card:active { transform:scale(0.97); }
+.ev-num {
+  background:linear-gradient(135deg,var(--rose-l),var(--rose-d));
+  width:36px; height:36px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:1.2rem; flex-shrink:0; margin-top:1px;
+}
+.ev-label { color:var(--gold); font-size:var(--fs-xs); font-weight:800; margin-bottom:3px; }
+.ev-text { font-size:var(--fs-sm); font-weight:600; line-height:1.5; }
+.verdict-note {
+  background:rgba(245,200,66,0.1); border:1px solid rgba(245,200,66,0.25);
+  border-radius:13px; padding:12px 16px; margin:4px 0 16px;
+  font-size:var(--fs-sm); font-weight:700; line-height:1.5;
+}
+
+/* ===================== PAGE 4 — WITNESSES ===================== */
+.witness-list { display:flex; flex-direction:column; gap:11px; margin:14px 0; }
+.witness {
+  background:rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.13);
+  border-radius:16px; padding:14px 16px;
+  display:flex; align-items:flex-start; gap:14px; text-align:right;
+  transition:transform 0.25s;
+}
+.witness:active { transform:scale(0.97); }
+.w-emoji { font-size:2.2rem; flex-shrink:0; animation:heartBeat 2s ease-in-out infinite; }
+.w-emoji:nth-child(1) { animation-delay:0.2s; }
+.w-name { color:var(--gold); font-size:var(--fs-xs); font-weight:800; margin-bottom:3px; }
+.w-quote { font-size:var(--fs-sm); font-weight:600; line-height:1.5; }
+
+/* ===================== PAGE 5 — VERDICT ===================== */
+.verdict-list { display:flex; flex-direction:column; gap:9px; margin:14px 0; }
+.v-item {
+  background:rgba(245,200,66,0.09); border:1px solid rgba(245,200,66,0.22);
+  border-radius:13px; padding:11px 16px;
+  display:flex; align-items:center; gap:12px; text-align:right;
+  font-size:var(--fs-sm); font-weight:700;
+  animation:slideUp 0.5s ease both;
+}
+.v-icon { font-size:1.5rem; flex-shrink:0; }
+
+/* ===================== FINALE ===================== */
+#finale-wrap {
+  position:fixed; inset:0; z-index:100;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  pointer-events:none;
+}
+#gift {
+  font-size:clamp(6rem,22vw,10rem);
+  display:none;
+  filter:drop-shadow(0 20px 50px rgba(230,57,117,0.6));
+  animation:giftDrop 1.4s cubic-bezier(.23,1.1,.32,1.3) both;
+}
+#bouquet {
+  display:none;
+  text-align:center;
+  line-height:1.3;
+  font-size:clamp(2.5rem,9vw,4.5rem);
+  animation:bouquetBloom 1.2s cubic-bezier(.175,.885,.32,1.275) both;
+  filter:drop-shadow(0 0 30px rgba(255,100,150,0.6));
+}
+.finale-msgs {
+  position:fixed; bottom:max(env(safe-area-inset-bottom,16px),16px);
+  left:50%; transform:translateX(-50%);
+  width:calc(100% - 32px); max-width:420px;
+  z-index:200; pointer-events:none;
+  display:flex; flex-direction:column; gap:8px;
+}
+.fmsg {
+  background:rgba(10,0,18,0.72);
+  backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,0.15);
+  border-radius:18px; padding:13px 20px;
+  font-size:var(--fs-md); font-weight:700; line-height:1.5;
+  opacity:0; transform:translateY(16px);
+  transition:opacity 0.55s ease, transform 0.55s ease;
+  text-shadow:0 2px 8px rgba(0,0,0,0.6);
+}
+.fmsg.show { opacity:1; transform:translateY(0); }
+#release-btn-wrap {
+  position:fixed; bottom:max(env(safe-area-inset-bottom,16px),16px);
+  left:50%; transform:translateX(-50%);
+  width:calc(100% - 32px); max-width:420px;
+  z-index:210; display:none; pointer-events:all;
+}
+
+/* ===================== FINAL SCREEN ===================== */
+#final-screen {
+  position:fixed; inset:0; z-index:300;
+  background:linear-gradient(160deg,rgba(8,0,18,0.92),rgba(50,0,25,0.92));
+  backdrop-filter:blur(22px);
+  display:none; flex-direction:column;
+  align-items:center; justify-content:center;
+  padding:32px 24px; text-align:center;
+}
+#final-screen.show { display:flex; }
+.final-h {
+  font-family:'Amiri',serif;
+  font-size:clamp(1.8rem,6vw,3rem); font-weight:700;
+  background:linear-gradient(135deg,var(--gold-l),var(--rose-l));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  background-clip:text; margin-bottom:16px; line-height:1.4;
+  animation:riseUp 0.8s ease both;
+}
+.final-p {
+  font-size:clamp(1rem,3.5vw,1.3rem); font-weight:600;
+  color:rgba(255,255,255,0.88); line-height:1.65; max-width:400px;
+  animation:riseUp 0.8s 0.25s ease both;
+}
+.final-hearts {
+  font-size:clamp(3rem,12vw,5rem); margin-top:22px;
+  animation:heartBeat 1.4s ease-in-out infinite;
+}
+
+/* ===================== PARTICLES (DOM) ===================== */
+.particle { position:fixed; pointer-events:none; z-index:5; }
+.confetti { border-radius:2px; animation:particleFall linear both; }
+.rose-drop { font-size:1.4rem; animation:roseRain linear both; }
+.balloon-el { animation:balloonUp linear both; }
+.fw-dot { width:5px; height:5px; border-radius:50%; animation:fireworkPop ease-out both; }
+.amb { position:fixed; pointer-events:none; z-index:3; font-size:1.3rem; opacity:0.18; animation:ambFloat linear infinite; }
+
+/* ===================== SECTION TITLES ===================== */
+.pg-title {
+  font-family:'Amiri',serif;
+  font-size:clamp(1.55rem,5.5vw,2.2rem); font-weight:700;
+  background:linear-gradient(135deg,var(--gold-l),var(--gold));
+  -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+  background-clip:text; margin-bottom:4px; line-height:1.3;
+}
+.pg-sub { font-size:var(--fs-xs); color:var(--muted); margin-bottom:14px; }
+
+/* small hearts row */
+.hearts-row { display:flex; justify-content:center; gap:14px; margin:12px 0; }
+.hr-el { font-size:1.6rem; animation:heartBeat 1.6s ease-in-out infinite; }
+.hr-el:nth-child(2) { animation-delay:0.3s; }
+.hr-el:nth-child(3) { animation-delay:0.6s; }
+
+/* card entrance */
+.card-anim { animation:pageIn 0.65s cubic-bezier(.175,.885,.32,1.275) both; }
+
+/* responsive bump */
+@media (min-width:480px) {
+  :root { --fs-md:1.05rem; --fs-lg:1.22rem; --fs-xl:1.45rem; }
+  .card { padding:34px 30px 28px; }
+}
+@media (min-height:700px) {
+  .page { justify-content:center; }
+}
+</style>
+</head>
+<body>
+
+<canvas id="bg-canvas"></canvas>
+<canvas id="petal-canvas"></canvas>
+<div id="red-overlay"></div>
+<div id="amb-wrap"></div>
+
+<!-- Progress -->
+<div id="progress">
+  <div class="dot on" id="d0"></div>
+  <div class="dot" id="d1"></div>
+  <div class="dot" id="d2"></div>
+  <div class="dot" id="d3"></div>
+  <div class="dot" id="d4"></div>
+</div>
+
+<!-- ██ PAGE 1 — القبض ██ -->
+<div class="page active" id="p1">
+  <div class="card card-anim">
+    <div class="stamp">🔴 سري للغاية</div>
+    <div class="alert-strip">🚨 تنبيه أمني عاجل جداً 🚨</div>
+
+    <span class="big-emoji">👮‍♂️</span>
+    <div class="arrest-title">تم القبض على المتهم</div>
+
+    <div style="margin:14px 0 20px; text-align:right;">
+      <div class="info-block">
+        <span class="info-label">📋 الاسم</span>
+        <span class="info-val">أنا — توتااااا</span>
+      </div>
+      <div class="info-block">
+        <span class="info-label">⚖️ التهمة</span>
+        <span class="info-val">التسبب في زعل أجمل بنت في الدنيا كلها 💔</span>
+      </div>
+      <div class="info-block">
+        <span class="info-label">🔒 العقوبة</span>
+        <span class="info-val">الحرمان من الابتسامة الحلوة دي 😞</span>
+      </div>
+      <div class="info-block">
+        <span class="info-label">📅 تاريخ الجريمة</span>
+        <span class="info-val">اليوم اللي كنت فيه غبي أكتر من اللازم 🤦‍♂️</span>
+      </div>
+    </div>
+
+    <button class="btn btn-rose" onclick="go(2)">
+      👮‍♂️ ابدأ التحقيق فوراً
+    </button>
+
+    <div class="hearts-row" style="margin-top:16px;">
+      <div class="hr-el">🌹</div>
+      <div class="hr-el">❤️</div>
+      <div class="hr-el">🌹</div>
+    </div>
+  </div>
+</div>
+
+<!-- ██ PAGE 2 — المحكمة ██ -->
+<div class="page" id="p2">
+  <div class="card card-anim">
+    <div class="pg-title">🏛️ قاعة المحكمة</div>
+    <div class="pg-sub">الجلسة منعقدة — القاضي الدبدوب في مكانه 🔨</div>
+
+    <span class="bear">🧸</span>
+
+    <div class="bubble">
+      "أيها المتهم... بتعترف إنك بتتصرف من غير دماغ أحياناً؟" 🔨
+    </div>
+
+    <div class="rejected-msg" id="rej-msg">
+      😂 المحكمة مش مصدقاك خالص! إجابة مرفوضة بالإجماع...
+    </div>
+
+    <div class="btn-row">
+      <button class="btn btn-ghost" onclick="handleNo()">لا طبعاً 🙅‍♂️</button>
+      <button class="btn btn-rose" onclick="go(3)" style="min-width:130px; width:auto; padding:13px 26px;">أيوه صح 😅</button>
+    </div>
+  </div>
+</div>
+
+<!-- ██ PAGE 3 — الأدلة ██ -->
+<div class="page" id="p3">
+  <div class="card card-anim">
+    <div class="pg-title">📁 غرفة الأدلة</div>
+    <div class="pg-sub">الأدلة بتتكلم من نفسها يا محترم...</div>
+
+    <div class="evidence-list">
+      <div class="ev-card">
+        <div class="ev-num">📄</div>
+        <div>
+          <div class="ev-label">الدليل الأول</div>
+          <div class="ev-text">اتصرف من غير ما يفكر ثانية واحدة — ودي عادة متكررة جداً 🤦‍♂️</div>
+        </div>
+      </div>
+      <div class="ev-card">
+        <div class="ev-num">📄</div>
+        <div>
+          <div class="ev-label">الدليل الثاني</div>
+          <div class="ev-text">زعّل حبيبته — وده أكبر جريمة ممكن حد يعملها في الدنيا دي 💔</div>
+        </div>
+      </div>
+      <div class="ev-card">
+        <div class="ev-num">📄</div>
+        <div>
+          <div class="ev-label">الدليل الثالث</div>
+          <div class="ev-text">افتكر إنه ذكي... وكأن الدماغ الصغيرة دي اختاراله قرارات صح 😂</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="verdict-note">
+      🔍 خلاصة التقرير: المتهم محتاج إعادة تأهيل عاطفي فوري ومتكرر يومياً.
+    </div>
+
+    <button class="btn btn-rose" onclick="go(4)">
+      🎙️ استدعاء الشهود
+    </button>
+  </div>
+</div>
+
+<!-- ██ PAGE 4 — الشهود ██ -->
+<div class="page" id="p4">
+  <div class="card card-anim">
+    <div class="pg-title">🎙️ شهادة الشهود</div>
+    <div class="pg-sub">والشهود مش هيسكتوا المرة دي...</div>
+
+    <div class="witness-list">
+      <div class="witness">
+        <div class="w-emoji">🌹</div>
+        <div>
+          <div class="w-name">الوردة</div>
+          <div class="w-quote">"هو غلط بس قلبه مليان حب. وده واضح جداً جداً لأي حاجة قريبة منه." 💕</div>
+        </div>
+      </div>
+      <div class="witness">
+        <div class="w-emoji">🧸</div>
+        <div>
+          <div class="w-name">الدبدوب</div>
+          <div class="w-quote">"أنا ساكن معاه وشايف كل حاجة — والراجل ندمان من قلبه مش بس بالكلام." 🐻</div>
+        </div>
+      </div>
+      <div class="witness">
+        <div class="w-emoji">❤️</div>
+        <div>
+          <div class="w-name">القلب</div>
+          <div class="w-quote">"المتهم مش بيتنفس صح من ساعة ما الزعل حصل. الوضع صعب جداً من جوا." 💔</div>
+        </div>
+      </div>
+    </div>
+
+    <button class="btn btn-rose" onclick="go(5)" style="margin-top:6px;">
+      ⚖️ اسمع الحكم النهائي
+    </button>
+  </div>
+</div>
+
+<!-- ██ PAGE 5 — الحكم ██ -->
+<div class="page" id="p5">
+  <div class="card card-anim">
+    <span class="bear" style="font-size:clamp(4rem,16vw,6rem);">🧸</span>
+    <div class="bubble" style="border-radius:18px 18px 4px 18px;">
+      "بعد مراجعة الأدلة والاستماع لكل الشهود... المحكمة لاحظت إن المتهم مش وحش — بس محتاج تأديب شوية." 🔨
+    </div>
+
+    <div class="pg-title" style="margin-top:10px;">الحكم النهائي:</div>
+
+    <div class="verdict-list">
+      <div class="v-item" style="animation-delay:.05s"><span class="v-icon">🤗</span><span>حضن افتراضي فوري لازم يتبعت دلوقتي</span></div>
+      <div class="v-item" style="animation-delay:.2s"><span class="v-icon">🌹</span><span>ورد بكميات غير محدودة — ومفيش حد يحسبها</span></div>
+      <div class="v-item" style="animation-delay:.35s"><span class="v-icon">💝</span><span>جرعة دلع يومية إلزامية — مفيش أعذار</span></div>
+      <div class="v-item" style="animation-delay:.5s"><span class="v-icon">🚫</span><span>ممنوع يزعلها تاني — ودي جريمة مش بتتسامح</span></div>
+      <div class="v-item" style="animation-delay:.65s"><span class="v-icon">😇</span><span>يفضل ذليل لها على طول — وده حكم نهائي</span></div>
+    </div>
+
+    <p style="font-size:var(--fs-md); font-weight:700; margin:14px 0; color:rgba(255,255,255,0.9);">
+      "المتهم يستحق فرصة واحدة أخيرة... لكن واحدة بس!" ❤️
+    </p>
+
+    <button class="btn btn-gold" onclick="startFinale()">
+      🌹 متدوسيش هنا خالص 🌹
+    </button>
+  </div>
+</div>
+
+<!-- ██ FINALE ██ -->
+<div class="page" id="p-finale">
+  <div id="finale-wrap">
+    <div id="gift">🎁</div>
+    <div id="bouquet">
+      🌹🌷🌸🌺🌹🌷🌸<br>
+      🌷🌸🌺🌹🌷🌸🌹🌷<br>
+      🌸🌺🌹🌷🌸🌺🌹<br>
+      &nbsp;&nbsp;&nbsp;🌹🌷🌸🌺🌹🌷&nbsp;&nbsp;&nbsp;
+    </div>
+  </div>
+
+  <div class="finale-msgs" id="f-msgs"></div>
+
+  <div id="release-btn-wrap">
+    <button class="btn btn-green" onclick="doRelease()">
+      😇 إطلاق سراح المتهم فوراً
+    </button>
+  </div>
+</div>
+
+<!-- ██ FINAL SCREEN ██ -->
+<div id="final-screen">
+  <div class="final-h">تم قبول الاستئناف بنجاح! ❤️😂</div>
+  <div class="final-p">
+    الحكم النهائي من المحكمة العليا للحب:<br><br>
+    ترجع الابتسامة الجميلة دي فوراً...<br>
+    وتفضل موجودة على طول 🌹🧸❤️
+  </div>
+  <div class="final-hearts">❤️</div>
+</div>
+
+<script>
+/* ============ BG CANVAS ============ */
+(()=>{
+  const C=document.getElementById('bg-canvas'), X=C.getContext('2d');
+  let W,H,t=0;
+  const resize=()=>{W=C.width=innerWidth; H=C.height=innerHeight;};
+  resize(); addEventListener('resize',resize);
+  const orbs=[
+    {px:.25,py:.3,r:.32,c:'rgba(160,0,70,0.18)',ph:0},
+    {px:.78,py:.65,r:.26,c:'rgba(230,57,117,0.13)',ph:2.1},
+    {px:.5,py:.08,r:.22,c:'rgba(245,200,66,0.07)',ph:4.3},
+    {px:.1,py:.8,r:.2,c:'rgba(200,20,80,0.11)',ph:1.5},
+  ];
+  (function draw(){
+    X.clearRect(0,0,W,H);
+    const g=X.createRadialGradient(W/2,H*.4,0,W/2,H*.4,Math.max(W,H)*.9);
+    g.addColorStop(0,'#280018'); g.addColorStop(1,'#0a0006');
+    X.fillStyle=g; X.fillRect(0,0,W,H);
+    orbs.forEach(o=>{
+      const ox=(o.px+Math.sin(t*.28+o.ph)*.12)*W;
+      const oy=(o.py+Math.cos(t*.22+o.ph)*.1)*H;
+      const r=o.r*Math.min(W,H);
+      const g2=X.createRadialGradient(ox,oy,0,ox,oy,r);
+      g2.addColorStop(0,o.c); g2.addColorStop(1,'transparent');
+      X.fillStyle=g2; X.fillRect(0,0,W,H);
+    });
+    t+=.015; requestAnimationFrame(draw);
+  })();
+})();
+
+/* ============ AMBIENT FLOATIES ============ */
+(()=>{
+  const wrap=document.getElementById('amb-wrap');
+  const items=['🌹','❤️','💕','🌷','✨','💖','🌸'];
+  const spawn=()=>{
+    const el=document.createElement('div');
+    el.className='amb';
+    el.textContent=items[Math.random()*items.length|0];
+    el.style.left=Math.random()*100+'vw';
+    const dur=9+Math.random()*12;
+    el.style.animationDuration=dur+'s';
+    el.style.animationDelay=Math.random()*2+'s';
+    el.style.fontSize=(1+Math.random())+'rem';
+    wrap.appendChild(el);
+    setTimeout(()=>el.remove(),(dur+2.5)*1000);
+    setTimeout(spawn,700+Math.random()*900);
+  };
+  spawn();
+})();
+
+/* ============ NAVIGATION ============ */
+let cur=1;
+function go(n){
+  document.getElementById(cur===1?'p1':`p${cur}`).classList.remove('active');
+  const nid=n==='fin'?'p-finale':`p${n}`;
+  cur=n;
+  const pg=document.getElementById(nid);
+  pg.classList.add('active');
+  // Re-animate card
+  const card=pg.querySelector('.card');
+  if(card){ card.style.animation='none'; card.offsetHeight; card.style.animation='pageIn 0.65s cubic-bezier(.175,.885,.32,1.275) both'; }
+  // dots
+  if(typeof n==='number'&&n<=5){
+    document.querySelectorAll('.dot').forEach((d,i)=>d.classList.toggle('on',i===n-1));
+  }
+}
+
+/* ============ PAGE 2 ============ */
+let noCount=0;
+function handleNo(){
+  noCount++;
+  const msg=document.getElementById('rej-msg');
+  const texts=[
+    '😂 المحكمة مش مصدقاك خالص! إجابة مرفوضة بالإجماع...',
+    '😂 تاني مرة؟! الدبدوب زعل منك بقا...',
+    '🤣 طيب تلت مرات؟ المحكمة بتضحك عليك دلوقتي!'
+  ];
+  msg.textContent=texts[Math.min(noCount-1,2)];
+  msg.style.display='block';
+  msg.style.animation='none'; msg.offsetHeight; msg.style.animation='shake 0.45s ease';
+  if(noCount>=2){
+    setTimeout(()=>{ msg.style.display='none'; go(3); },1800);
+  } else {
+    setTimeout(()=>{ msg.style.display='none'; },2200);
+  }
+}
+
+/* ============ FINALE ============ */
+let petalLoop=null;
+
+function startFinale(){
+  go('fin');
+  document.querySelectorAll('.dot').forEach(d=>d.classList.remove('on'));
+
+  // shake + red flash
+  shake(document.body,700);
+  flash();
+
+  // initial rose rain
+  roseRain(20,10000);
+
+  // gift box drop
+  setTimeout(()=>{
+    const gift=document.getElementById('gift');
+    gift.style.display='block';
+    setTimeout(()=>{
+      shake(gift,500);
+      confetti(55);
+    },1450);
+    setTimeout(()=>{
+      gift.style.display='none';
+      const b=document.getElementById('bouquet');
+      b.style.display='block';
+      petalLoop=startPetals();
+      roseRain(40,15000);
+      fireworks(6);
+    },2400);
+  },400);
+
+  // messages
+  const msgs=[
+    {t:'يا ترى كنت هجيبلك كام وردة؟ 🤔',d:3200},
+    {t:'فقررت إن الورد مش هيكفي أصلاً... 🌹',d:5000},
+    {t:'فجيبتلك موقع كامل مليان بالورد والحب ❤️🌹',d:6800},
+    {t:'وبرضه آسف على فكرة 😅',d:8600},
+    {t:'أنا آسف فعلاً يا حبيبتي ❤️',d:10400},
+    {t:'بس في حاجة مهمة جداً...',d:12200},
+    {t:'وحشتيني كتير جداً. 💕',d:13600},
+  ];
+  const fc=document.getElementById('f-msgs');
+  msgs.forEach(({t,d},i)=>{
+    setTimeout(()=>{
+      const el=document.createElement('div');
+      el.className='fmsg'; el.textContent=t;
+      fc.appendChild(el);
+      requestAnimationFrame(()=>requestAnimationFrame(()=>el.classList.add('show')));
+      if(i%2===0) fireworks(4);
+      // keep only last 3
+      if(fc.children.length>3){
+        const old=fc.children[0];
+        old.classList.remove('show');
+        setTimeout(()=>old.remove(),600);
+      }
+    },d);
+  });
+
+  // release button
+  setTimeout(()=>{
+    const wrap=document.getElementById('release-btn-wrap');
+    wrap.style.display='block';
+    fc.style.bottom='90px';
+  },15400);
+}
+
+function doRelease(){
+  shake(document.body,900);
+  for(let i=0;i<18;i++) setTimeout(()=>fireworks(7),i*180);
+  balloons(22);
+  roseRain(90,9000);
+  confetti(180);
+  celebBears();
+  setTimeout(()=>{
+    const fs=document.getElementById('final-screen');
+    fs.classList.add('show');
+    fireworks(25);
+    roseRain(60,7000);
+  },2800);
+}
+
+/* ============ PARTICLE HELPERS ============ */
+function confetti(n){
+  const colors=['#e63975','#ff7aaa','#f5c842','#fff','#ff4444','#44ddaa','#cc88ff','#ffaa44'];
+  for(let i=0;i<n;i++) setTimeout(()=>{
+    const el=document.createElement('div');
+    el.className='particle confetti';
+    el.style.cssText=`left:${Math.random()*100}vw;top:-20px;background:${colors[Math.random()*colors.length|0]};width:${6+Math.random()*9}px;height:${5+Math.random()*9}px;border-radius:${Math.random()>.5?'50%':'2px'};animation-duration:${2.4+Math.random()*3}s;animation-delay:0s;`;
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),6000);
+  },i*28);
+}
+
+function roseRain(n,totalMs){
+  const emj=['🌹','🌷','🌸','🌺','💮'];
+  for(let i=0;i<n;i++) setTimeout(()=>{
+    const el=document.createElement('div');
+    el.className='particle rose-drop';
+    const dur=3+Math.random()*4;
+    el.style.cssText=`left:${Math.random()*110-5}vw;top:-70px;font-size:${1.1+Math.random()*1.4}rem;animation-duration:${dur}s;animation-delay:0s;`;
+    el.textContent=emj[Math.random()*emj.length|0];
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),(dur+.3)*1000);
+  },(i/n)*totalMs*.85+Math.random()*400);
+}
+
+function fireworks(n){
+  const colors=['#ff7aaa','#f5c842','#fff','#ff4444','#44ddff','#cc88ff','#ffaa00','#66ff88'];
+  for(let i=0;i<n;i++){
+    const cx=8+Math.random()*84, cy=8+Math.random()*65;
+    for(let j=0;j<18;j++){
+      const el=document.createElement('div');
+      el.className='particle fw-dot';
+      const angle=(j/18)*Math.PI*2, dist=45+Math.random()*90;
+      el.style.cssText=`left:${cx}vw;top:${cy}vh;background:${colors[Math.random()*colors.length|0]};--fx:${Math.cos(angle)*dist}px;--fy:${Math.sin(angle)*dist}px;animation-duration:${.55+Math.random()*.6}s;animation-delay:${Math.random()*.25}s;`;
+      document.body.appendChild(el);
+      setTimeout(()=>el.remove(),1600);
+    }
+  }
+}
+
+function balloons(n){
+  const emj=['🎈','🎈','🎊','🎉','💝'];
+  for(let i=0;i<n;i++) setTimeout(()=>{
+    const el=document.createElement('div');
+    el.className='particle balloon-el';
+    const dur=4+Math.random()*5, rot=(Math.random()*20-10)+'deg';
+    el.style.cssText=`left:${Math.random()*100}vw;bottom:-20px;font-size:${2+Math.random()*2.5}rem;--rot:${rot};animation-duration:${dur}s;animation-delay:0s;`;
+    el.textContent=emj[Math.random()*emj.length|0];
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),(dur+.5)*1000);
+  },i*160);
+}
+
+function celebBears(){
+  const emj=['🧸','🧸','💝','🧸','❤️','🐻'];
+  for(let i=0;i<14;i++) setTimeout(()=>{
+    const el=document.createElement('div');
+    el.className='particle balloon-el';
+    const dur=5+Math.random()*4, rot=(Math.random()*16-8)+'deg';
+    el.style.cssText=`left:${Math.random()*100}vw;bottom:-20px;font-size:${2.5+Math.random()*2}rem;--rot:${rot};animation-duration:${dur}s;animation-delay:0s;`;
+    el.textContent=emj[Math.random()*emj.length|0];
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(),(dur+.5)*1000);
+  },i*220);
+}
+
+/* ============ PETAL CANVAS ============ */
+function startPetals(){
+  const C=document.getElementById('petal-canvas'), X=C.getContext('2d');
+  C.width=innerWidth; C.height=innerHeight;
+  const colors=['#ff7aaa','#e63975','#ffb3cc','#ff5599','#ffd6e7','#ff99bb','#ffccdd'];
+  const petals=Array.from({length:100},()=>({
+    x:Math.random()*C.width, y:Math.random()*-C.height,
+    r:3+Math.random()*9, c:colors[Math.random()*colors.length|0],
+    spd:1.2+Math.random()*2.8, wb:Math.random()*Math.PI*2,
+    ws:.018+Math.random()*.038, op:.35+Math.random()*.65,
+    rot:Math.random()*Math.PI*2, rs:(Math.random()-.5)*.06,
+  }));
+  let running=true;
+  (function draw(){
+    X.clearRect(0,0,C.width,C.height);
+    petals.forEach(p=>{
+      p.wb+=p.ws; p.rot+=p.rs;
+      p.x+=Math.sin(p.wb)*2; p.y+=p.spd;
+      if(p.y>C.height+20){p.y=-20;p.x=Math.random()*C.width;}
+      X.save(); X.globalAlpha=p.op;
+      X.translate(p.x,p.y); X.rotate(p.rot);
+      X.beginPath();
+      X.ellipse(0,0,p.r,p.r*.6,0,0,Math.PI*2);
+      X.fillStyle=p.c; X.fill();
+      X.restore();
+    });
+    if(running) requestAnimationFrame(draw);
+  })();
+  setTimeout(()=>{running=false; X.clearRect(0,0,C.width,C.height);},28000);
+  return ()=>running=false;
+}
+
+/* ============ UTILS ============ */
+function shake(el,dur){
+  el.style.animation='shake .55s ease';
+  setTimeout(()=>el.style.animation='',dur);
+}
+function flash(){
+  const ov=document.getElementById('red-overlay');
+  ov.classList.add('on'); setTimeout(()=>ov.classList.remove('on'),750);
+}
+
+/* ============ INITIAL ROSE RAIN ============ */
+setTimeout(()=>roseRain(10,6000),800);
+</script>
+</body>
+</html>
